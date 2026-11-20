@@ -38,6 +38,17 @@ docker compose exec -T backend python -m scripts.seed_demo
 ## 算法与真实边界
 Python 对索引从左到右分析，匹配相等列每列 +40，首个时间范围列 +20 后停止，最高100。缺失首列停止。启发式不等于优化器成本。worker 使用 MySQL GET_LOCK 串行隔离，删除遗留试验索引 → 无候选基线 EXPLAIN/查询5次 → 建候选索引/ANALYZE → 查询5次和EXPLAIN → 校验有序全结果SHA-256 → 清理索引。数据固定、查询参数固定可复现，耗时受缓存和驱动波动影响，不保证提速。20 行写探针是真实 INSERT 后 ROLLBACK，可能消耗 auto_increment 序列号。试验只修改专用 telemetry 表，不能接受任意SQL或远端数据库。任务使用简单 Redis 单消费者，进程崩溃后的 running 任务不自动重试，保留状态供人工复查并新建任务。
 
+## 遥测去重与补报
+设备重发造成的同 `sensor_id+recorded_at` 多行，以最早入库行为保留读数，旧编号登记 `telemetry_aliases` 后可继续查询。
+
+- `POST /telemetry/report`（operator/admin）：同键同值返回保留编号，异值 409，已确认读数不覆盖；清理期间并发安全（键级 GET_LOCK，唯一约束启用后由约束兜底）。
+- `GET /telemetry/{id}`：任意角色；已合并旧编号返回保留读数并标 `merged=true`。
+- `POST /telemetry/dedup/run?limit=N`（operator/admin）：批量清理，每组一个事务（先别名后删除），中断后重跑即恢复；与试验共用 `index_trial_serial` 锁互斥。
+- `GET /telemetry/dedup/status`：剩余重复组/别名数/约束状态。
+- `POST /telemetry/dedup/finalize`（admin）：核对无重复组且无悬空别名后，启用 `uniq_sensor_recorded (sensor_id,recorded_at)` 唯一约束。
+
+验证脚本见 `test-artifacts/gb-4102`，覆盖未清完时同键上报、并发上报、中断恢复、核对与约束、写探针回滚。
+
 ## 技术与目录
 Python3.11 / FastAPI / SQLAlchemy / PyMySQL / Redis；MySQL8.0；原生 HTML CSS ES modules；nginx1.27。恰好五容器 frontend/backend/worker/db/redis，均有健康探针。数据库、Redis、应用产物各用命名卷。
 

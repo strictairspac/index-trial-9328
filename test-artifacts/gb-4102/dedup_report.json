@@ -1,0 +1,147 @@
+{
+  "batch": "gb-4102",
+  "passed": 28,
+  "failed": 0,
+  "checks": [
+    {
+      "check": "准备：历史重复已存在",
+      "ok": true,
+      "detail": "{'duplicate_groups': 2, 'aliases': 0, 'orphan_aliases': 0, 'rows': 5005, 'unique_constraint': False}"
+    },
+    {
+      "check": "未清完时同键同值返回最早保留编号",
+      "ok": true,
+      "detail": "{'id': 5001, 'status': 'exists', 'detail': '同键同值，返回保留编号'}"
+    },
+    {
+      "check": "未清完时同键异值报409",
+      "ok": true,
+      "detail": "409 {'detail': '同一设备同一采集时刻已存在不同读数，已确认的记录不可覆盖'}"
+    },
+    {
+      "check": "第二组重复同键同值返回保留编号",
+      "ok": true,
+      "detail": "{'id': 5004, 'status': 'exists', 'detail': '同键同值，返回保留编号'}"
+    },
+    {
+      "check": "清理前旧编号仍是原始行",
+      "ok": true,
+      "detail": "{'id': 5002, 'sensor_id': 777, 'recorded_at': '2026-11-15T08:00:00', 'device_type': 'pump', 'value': 55.5, 'merged': False}"
+    },
+    {
+      "check": "清理期间并发上报同键同值：同一编号且仅一次accepted",
+      "ok": true,
+      "detail": "[(200, {'id': 5006, 'status': 'exists', 'detail': '同键同值，返回保留编号'}), (200, {'id': 5006, 'status': 'accepted', 'detail': '已入库'}), (200, {'id': 5006, 'status': 'exists', 'detail': '同键同值，返回保留编号'}), (200, {'id': 5006, 'status': 'exists', 'detail': '同键同值，返回保留编号'}), (200, {'id': 5006, 'status': 'exists', 'd"
+    },
+    {
+      "check": "中断回滚后旧编号仍指向原始行",
+      "ok": true,
+      "detail": "{'id': 5002, 'sensor_id': 777, 'recorded_at': '2026-11-15T08:00:00', 'device_type': 'pump', 'value': 55.5, 'merged': False}"
+    },
+    {
+      "check": "中断回滚后无残留别名",
+      "ok": true,
+      "detail": "{'duplicate_groups': 2, 'aliases': 0, 'orphan_aliases': 0, 'rows': 5006, 'unique_constraint': False}"
+    },
+    {
+      "check": "恢复后首轮清理1组",
+      "ok": true,
+      "detail": "{'cleaned_keys': 1, 'aliased_rows': 2, 'duplicate_groups': 1, 'aliases': 2, 'orphan_aliases': 0, 'rows': 5004, 'unique_constraint': False}"
+    },
+    {
+      "check": "旧编号a2查到保留读数",
+      "ok": true,
+      "detail": "{'id': 5001, 'sensor_id': 777, 'recorded_at': '2026-11-15T08:00:00', 'device_type': 'pump', 'value': 55.5, 'merged': True, 'queried_id': 5002, 'detail': '该编号为重复上报，读数以最早入库的保留记录为准'}"
+    },
+    {
+      "check": "旧编号a3查到保留读数",
+      "ok": true,
+      "detail": "{'id': 5001, 'sensor_id': 777, 'recorded_at': '2026-11-15T08:00:00', 'device_type': 'pump', 'value': 55.5, 'merged': True, 'queried_id': 5003, 'detail': '该编号为重复上报，读数以最早入库的保留记录为准'}"
+    },
+    {
+      "check": "B组仍未清完时同键同值返回保留编号",
+      "ok": true,
+      "detail": "{'id': 5004, 'status': 'exists', 'detail': '同键同值，返回保留编号'}"
+    },
+    {
+      "check": "B组仍未清完时异值报409",
+      "ok": true,
+      "detail": "409"
+    },
+    {
+      "check": "第二轮清完剩余重复",
+      "ok": true,
+      "detail": "{'cleaned_keys': 1, 'aliased_rows': 1, 'duplicate_groups': 0, 'aliases': 3, 'orphan_aliases': 0, 'rows': 5003, 'unique_constraint': False}"
+    },
+    {
+      "check": "恢复后旧编号b2查到保留读数",
+      "ok": true,
+      "detail": "{'id': 5004, 'sensor_id': 778, 'recorded_at': '2026-11-16T09:30:00', 'device_type': 'motor', 'value': 77.7, 'merged': True, 'queried_id': 5005, 'detail': '该编号为重复上报，读数以最早入库的保留记录为准'}"
+    },
+    {
+      "check": "核对无遗漏（0重复组/0悬空别名/3别名）",
+      "ok": true,
+      "detail": "{'duplicate_groups': 0, 'aliases': 3, 'orphan_aliases': 0, 'rows': 5003, 'unique_constraint': False}"
+    },
+    {
+      "check": "operator启用约束被403",
+      "ok": true,
+      "detail": "403"
+    },
+    {
+      "check": "admin核对后启用唯一约束",
+      "ok": true,
+      "detail": "{'duplicate_groups': 0, 'aliases': 3, 'orphan_aliases': 0, 'rows': 5003, 'unique_constraint': True}"
+    },
+    {
+      "check": "库级唯一约束拒绝直接重复插入",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "约束后同键同值仍返回保留编号",
+      "ok": true,
+      "detail": "{'id': 5001, 'status': 'exists', 'detail': '同键同值，返回保留编号'}"
+    },
+    {
+      "check": "约束后同键异值仍报409",
+      "ok": true,
+      "detail": "409"
+    },
+    {
+      "check": "新键正常入库",
+      "ok": true,
+      "detail": "{'id': 5008, 'status': 'accepted', 'detail': '已入库'}"
+    },
+    {
+      "check": "新编号可查",
+      "ok": true,
+      "detail": "{'id': 5008, 'sensor_id': 779, 'recorded_at': '2026-11-17T10:00:00', 'device_type': 'valve', 'value': 12.25, 'merged': False}"
+    },
+    {
+      "check": "已确认读数未被覆盖",
+      "ok": true,
+      "detail": "{'id': 5001, 'sensor_id': 777, 'recorded_at': '2026-11-15T08:00:00', 'device_type': 'pump', 'value': 55.5, 'merged': False}"
+    },
+    {
+      "check": "viewer上报被403",
+      "ok": true,
+      "detail": "403"
+    },
+    {
+      "check": "不存在编号404",
+      "ok": true,
+      "detail": "404"
+    },
+    {
+      "check": "写探针在唯一约束下执行且回滚",
+      "ok": true,
+      "detail": "probe=1.6607ms rows 5004->5004"
+    },
+    {
+      "check": "写探针无残留行",
+      "ok": true,
+      "detail": "0"
+    }
+  ]
+}

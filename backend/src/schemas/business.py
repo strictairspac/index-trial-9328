@@ -1,5 +1,6 @@
 from pydantic import BaseModel,Field,model_validator
 from datetime import datetime
+from math import isfinite
 from src.constants.enums import COLUMNS
 class Login(BaseModel):
  email:str;password:str
@@ -29,3 +30,17 @@ class CandidateInput(BaseModel):
 class ExperimentInput(BaseModel):
  name:str=Field(min_length=2,max_length=120)
  candidate_id:int
+class TelemetryReport(BaseModel):
+ sensor_id:int=Field(ge=1,le=1000)
+ recorded_at:str
+ device_type:str
+ value:float
+ @model_validator(mode='after')
+ def reading_valid(self):
+  try:parsed=datetime.fromisoformat(self.recorded_at)
+  except ValueError:raise ValueError('采集时刻必须是 ISO 格式，如 2026-11-17T12:00:00')
+  if parsed.tzinfo is not None:raise ValueError('采集时刻不接受时区偏移')
+  self.recorded_at=parsed.isoformat(timespec='seconds')
+  if self.device_type not in ('pump','motor','valve'):raise ValueError('设备类型无效')
+  if not isfinite(self.value):raise ValueError('读数必须是有限数值')
+  return self

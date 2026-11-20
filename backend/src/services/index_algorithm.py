@@ -1,5 +1,6 @@
 """Controlled MySQL index trial. All dynamic identifiers are server-whitelisted."""
 import hashlib,json,time,statistics
+from datetime import datetime,timedelta
 from sqlalchemy import text
 from src.config.database import engine
 from src.constants.enums import COLUMNS
@@ -18,7 +19,9 @@ def _timed(conn,query,params):
  return rows,round(statistics.median(samples),4),[round(x,4) for x in samples]
 def _write_probe(conn):
  t=time.perf_counter()
- conn.execute(text("INSERT INTO telemetry(sensor_id,recorded_at,device_type,value) VALUES (999,'2026-11-17T12:00:00','pump',42.5)"),[{} for _ in range(20)])
+ base=datetime(2026,11,17,12,0,0)
+ rows=[{'sensor':999,'at':(base+timedelta(seconds=i)).isoformat(),'v':42.5} for i in range(20)]
+ conn.execute(text("INSERT INTO telemetry(sensor_id,recorded_at,device_type,value) VALUES (:sensor,:at,'pump',:v)"),rows)
  elapsed=(time.perf_counter()-t)*1000;conn.rollback();return round(elapsed,4)
 def run(snapshot):
  w=snapshot['workload'];columns=snapshot['candidate']['columns']
